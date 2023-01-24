@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PlayerController : MonoBehaviour
 {
@@ -9,8 +10,6 @@ public class PlayerController : MonoBehaviour
     private float speed = 10f;
     private float jumpingPower = 20f;
     private bool isFacingRight = true;
-    public bool PlayerCode = true;
-    public GameObject Player;
 
 
     [SerializeField] private Rigidbody2D rb;
@@ -19,18 +18,29 @@ public class PlayerController : MonoBehaviour
     [SerializeField] GameObject GameOverScreen;
     public AudioSource GameOver;
     public GameObject AudioObject;
-    public float timeSlowMultiplyer;
 
-    public class TimeScale
-    {
-        public static float player = 1;
-        public static float enemies = 1;
-        public static float global = 1;
-    }
+    public float characterSpeedUp = 5f;
+    public float gravityChange;
+    public float jumpChange;
+
+    public SpriteRenderer sr;
+
+    public GameObject killAura;
+
+    public TimeManager timeManager;
+    public GameObject timeObject;
+
+    private float hitCount = 2f;
 
     void Start()
     {
+        killAura.SetActive(false);
 
+        timeObject.SetActive(true);
+
+        hitCount = 2f;
+
+        sr.color = Color.white;
     }
 
     void Update()
@@ -40,13 +50,28 @@ public class PlayerController : MonoBehaviour
 
         rb.velocity = new Vector2(horizontal * speed, rb.velocity.y);
 
-        if (Input.GetKeyDown(KeyCode.T))
+        if (Input.GetKeyDown(KeyCode.Mouse1))
         {
-            TimeScale.global = 1 / timeSlowMultiplyer;
+            timeManager.makeSlow();
+            speed = speed * characterSpeedUp;
+            rb.gravityScale = rb.gravityScale * gravityChange;
+            jumpingPower = jumpingPower * jumpChange;
         }
-        else if (Input.GetKeyUp(KeyCode.T))
+        else if (Input.GetKeyUp(KeyCode.Mouse1))
         {
-            TimeScale.global = 1;
+            timeManager.makeFast();
+            speed = speed / characterSpeedUp;
+            rb.gravityScale = rb.gravityScale / gravityChange;
+            jumpingPower = jumpingPower / jumpChange;
+        }
+
+        if (Input.GetKeyDown(KeyCode.Mouse0))
+        {
+            killAura.SetActive(true);
+        }
+        else if (Input.GetKeyUp(KeyCode.Mouse0))
+        {
+            killAura.SetActive(false);
         }
 
         if (Input.GetButtonDown("Jump") && IsGrounded())
@@ -66,6 +91,16 @@ public class PlayerController : MonoBehaviour
         }
 
         flip();
+
+        if (hitCount <= 0)
+        {
+            Death();
+        }
+
+        if (hitCount == 1)
+        {
+            sr.color = Color.red;
+        }
     }
 
     private void fixedUpdate()
@@ -94,11 +129,25 @@ public class PlayerController : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.gameObject.tag == "Enemy" || collision.gameObject.tag == "Spikes")
+        if (collision.gameObject.tag == "Enemy")
         {
-            GameOver.Play();
-            GameOverScreen.SetActive(true);
-            Time.timeScale = 0f;
+            /*GameOver.Play();
+            GameOverScreen.SetActive(true);*/
+            hitCount = hitCount - 1;
         }
     }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.tag == "Spikes")
+        {
+            Death();
+        }
+    }
+
+    private void Death()
+    {
+            SceneManager.LoadScene("Game Over");
+    }
+    
 }
