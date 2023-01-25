@@ -7,6 +7,7 @@ public class ShieldScript : MonoBehaviour
     private float shieldHealth = 3f;
     public GameObject Shield;
     public SpriteRenderer sr;
+    public AudioSource audioSource;
 
     // Start is called before the first frame update
     void Start()
@@ -43,6 +44,11 @@ public class ShieldScript : MonoBehaviour
         if (collision.gameObject.tag == "Enemy")
         {
             shieldHealth = shieldHealth - 1;
+
+            if (shieldHealth == 0)
+            {
+                audioSource.Play();
+            }
         }
     }
 }

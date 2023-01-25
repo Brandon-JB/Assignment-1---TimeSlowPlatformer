@@ -10,6 +10,7 @@ TagManager:
   - KillAura
   - EnemyHurt
   - Spikes
+  - WinGate
   layers:
   - Default
   - TransparentFX

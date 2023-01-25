@@ -15,9 +15,6 @@ public class PlayerController : MonoBehaviour
     [SerializeField] private Rigidbody2D rb;
     [SerializeField] private Transform groundCheck;
     [SerializeField] private LayerMask groundlayer;
-    [SerializeField] GameObject GameOverScreen;
-    public AudioSource GameOver;
-    public GameObject AudioObject;
 
     public float characterSpeedUp = 5f;
     public float gravityChange;
@@ -32,6 +29,10 @@ public class PlayerController : MonoBehaviour
 
     private float hitCount = 2f;
 
+    public static bool game_paused = false;
+    public GameObject pauseMenu;
+
+
     void Start()
     {
         killAura.SetActive(false);
@@ -41,6 +42,7 @@ public class PlayerController : MonoBehaviour
         hitCount = 2f;
 
         sr.color = Color.white;
+        game_paused = false;
     }
 
     void Update()
@@ -50,14 +52,14 @@ public class PlayerController : MonoBehaviour
 
         rb.velocity = new Vector2(horizontal * speed, rb.velocity.y);
 
-        if (Input.GetKeyDown(KeyCode.Mouse1))
+        if (Input.GetKeyDown(KeyCode.Mouse1) && game_paused == false)
         {
             timeManager.makeSlow();
             speed = speed * characterSpeedUp;
             rb.gravityScale = rb.gravityScale * gravityChange;
             jumpingPower = jumpingPower * jumpChange;
         }
-        else if (Input.GetKeyUp(KeyCode.Mouse1))
+        else if (Input.GetKeyUp(KeyCode.Mouse1) && game_paused == false)
         {
             timeManager.makeFast();
             speed = speed / characterSpeedUp;
@@ -65,11 +67,11 @@ public class PlayerController : MonoBehaviour
             jumpingPower = jumpingPower / jumpChange;
         }
 
-        if (Input.GetKeyDown(KeyCode.Mouse0))
+        if (Input.GetKeyDown(KeyCode.Mouse0) && game_paused == false)
         {
             killAura.SetActive(true);
         }
-        else if (Input.GetKeyUp(KeyCode.Mouse0))
+        else if (Input.GetKeyUp(KeyCode.Mouse0) && game_paused == false)
         {
             killAura.SetActive(false);
         }
@@ -84,12 +86,6 @@ public class PlayerController : MonoBehaviour
             rb.velocity = new Vector2(rb.velocity.x, rb.velocity.y * 0.5f);
         }
 
-        if (Input.GetKeyDown("escape"))
-        {
-            GameOverScreen.SetActive(true);
-            Time.timeScale = 0f;
-        }
-
         flip();
 
         if (hitCount <= 0)
@@ -100,6 +96,20 @@ public class PlayerController : MonoBehaviour
         if (hitCount == 1)
         {
             sr.color = Color.red;
+        }
+
+        if (Input.GetKeyDown(KeyCode.Escape) && game_paused == false)
+        {
+            game_paused = true;
+            pauseMenu.SetActive(true);
+            Time.timeScale = 0;
+        }
+        else if (Input.GetKeyDown(KeyCode.Escape) && game_paused == true)
+        {
+            game_paused = false;
+            pauseMenu.SetActive(false);
+            Time.timeScale = 1;
+
         }
     }
 
@@ -135,6 +145,12 @@ public class PlayerController : MonoBehaviour
             GameOverScreen.SetActive(true);*/
             hitCount = hitCount - 1;
         }
+
+        if (collision.gameObject.tag == "WinGate")
+        {
+            SceneManager.LoadScene("Win Screen");
+            Time.timeScale = 1f;
+        }
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
@@ -147,7 +163,8 @@ public class PlayerController : MonoBehaviour
 
     private void Death()
     {
-            SceneManager.LoadScene("Game Over");
+        SceneManager.LoadScene("Game Over");
+        Time.timeScale = 1f;
     }
     
 }
